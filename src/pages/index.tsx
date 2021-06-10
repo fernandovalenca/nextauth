@@ -1,7 +1,26 @@
 import Head from "next/head";
 import { LockClosedIcon } from "@heroicons/react/solid";
+import { useForm } from "react-hook-form";
+import { useCallback } from "react";
+import { useAuth } from "../hooks/useAuth";
+
+type FormData = {
+  email: string;
+  password: string;
+};
 
 const Home = () => {
+  const { register, handleSubmit } = useForm();
+  const { signIn } = useAuth();
+
+  const handleSignIn = useCallback(async ({ email, password }: FormData) => {
+    try {
+      await signIn({ email, password });
+    } catch (error) {
+      console.log({ error });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Head>
@@ -19,7 +38,7 @@ const Home = () => {
             Sign in to your account
           </h2>
         </div>
-        <form className="mt-8 space-y-6">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(handleSignIn)}>
           <input type="hidden" name="remember" defaultValue="true" />
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
@@ -27,6 +46,7 @@ const Home = () => {
                 Email address
               </label>
               <input
+                {...register("email")}
                 id="email-address"
                 name="email"
                 type="email"
@@ -41,6 +61,7 @@ const Home = () => {
                 Password
               </label>
               <input
+                {...register("password")}
                 id="password"
                 name="password"
                 type="password"
@@ -60,19 +81,13 @@ const Home = () => {
                 type="checkbox"
                 className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
               />
-              <label
-                htmlFor="remember_me"
-                className="ml-2 block text-sm text-gray-900"
-              >
+              <label htmlFor="remember_me" className="ml-2 block text-sm text-gray-900">
                 Remember me
               </label>
             </div>
 
             <div className="text-sm">
-              <a
-                href="#"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
+              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
                 Forgot your password?
               </a>
             </div>

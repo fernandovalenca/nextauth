@@ -1,15 +1,16 @@
-import { Fragment } from "react";
 import Head from "next/head";
-import { Disclosure, Menu, Transition } from "@headlessui/react";
-import { BellIcon, MenuIcon, XIcon } from "@heroicons/react/outline";
+import { GetServerSideProps } from "next";
+import { Fragment, useEffect } from "react";
+import { parseCookies } from "nookies";
 
-const navigation = [
-  "Dashboard",
-  "Team",
-  "Projects",
-  "Calendar",
-  "Reports",
-];
+import { Disclosure, Menu, Transition } from "@headlessui/react";
+import { BellIcon, MenuIcon, XIcon } from "@heroicons/react/solid";
+
+import { api } from "../services/api";
+import { useAuth } from "../hooks/useAuth";
+import getAPIClient from "../services/apiClient";
+
+const navigation = ["Dashboard", "Team", "Projects", "Calendar", "Reports"];
 const profile = ["Your Profile", "Settings"];
 
 function classNames(...classes) {
@@ -17,6 +18,14 @@ function classNames(...classes) {
 }
 
 const Dashboard = () => {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    api.get("/").then((response) => {
+      console.log(response.data);
+    });
+  }, []);
+
   return (
     <div>
       <Head>
@@ -65,13 +74,8 @@ const Dashboard = () => {
                 <div className="hidden md:block">
                   <div className="ml-4 flex items-center md:ml-6">
                     <button className="bg-gray-800 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
-                      <span className="sr-only">
-                        View notifications
-                      </span>
-                      <BellIcon
-                        className="h-6 w-6"
-                        aria-hidden="true"
-                      />
+                      <span className="sr-only">View notifications</span>
+                      <BellIcon className="h-6 w-6" aria-hidden="true" />
                     </button>
 
                     {/* Profile dropdown */}
@@ -80,14 +84,8 @@ const Dashboard = () => {
                         <>
                           <div>
                             <Menu.Button className="max-w-xs bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
-                              <span className="sr-only">
-                                Open user menu
-                              </span>
-                              <img
-                                className="h-8 w-8 rounded-full"
-                                src="https://github.com/diego3g.png"
-                                alt=""
-                              />
+                              <span className="sr-only">Open user menu</span>
+                              <img className="h-8 w-8 rounded-full" src={user?.avatar_url} alt="" />
                             </Menu.Button>
                           </div>
                           <Transition
@@ -120,10 +118,7 @@ const Dashboard = () => {
                                 </Menu.Item>
                               ))}
                               <Menu.Item>
-                                <a
-                                  href="#"
-                                  className="block px-4 py-2 text-sm text-gray-700"
-                                >
+                                <a href="#" className="block px-4 py-2 text-sm text-gray-700">
                                   Sign out
                                 </a>
                               </Menu.Item>
@@ -139,15 +134,9 @@ const Dashboard = () => {
                   <Disclosure.Button className="bg-gray-800 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
                     <span className="sr-only">Open main menu</span>
                     {open ? (
-                      <XIcon
-                        className="block h-6 w-6"
-                        aria-hidden="true"
-                      />
+                      <XIcon className="block h-6 w-6" aria-hidden="true" />
                     ) : (
-                      <MenuIcon
-                        className="block h-6 w-6"
-                        aria-hidden="true"
-                      />
+                      <MenuIcon className="block h-6 w-6" aria-hidden="true" />
                     )}
                   </Disclosure.Button>
                 </div>
@@ -181,11 +170,7 @@ const Dashboard = () => {
               <div className="pt-4 pb-3 border-t border-gray-700">
                 <div className="flex items-center px-5">
                   <div className="flex-shrink-0">
-                    <img
-                      className="h-10 w-10 rounded-full"
-                      src="https://github.com/diego3g.png"
-                      alt=""
-                    />
+                    <img className="h-10 w-10 rounded-full" src={user?.avatar_url} alt="" />
                   </div>
                   <div className="ml-3">
                     <div className="text-base font-medium leading-none text-white">
@@ -196,13 +181,8 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <button className="ml-auto bg-gray-800 flex-shrink-0 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
-                    <span className="sr-only">
-                      View notifications
-                    </span>
-                    <BellIcon
-                      className="h-6 w-6"
-                      aria-hidden="true"
-                    />
+                    <span className="sr-only">View notifications</span>
+                    <BellIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
                 </div>
                 <div className="mt-3 px-2 space-y-1">
@@ -230,9 +210,7 @@ const Dashboard = () => {
 
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Dashboard
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         </div>
       </header>
       <main>
@@ -249,3 +227,25 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const apiClient = getAPIClient(ctx);
+  const { nextauth_token: token } = parseCookies(ctx);
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  apiClient.get("/").then((response) => {});
+
+  return {
+    props: {
+      token,
+    },
+  };
+};
